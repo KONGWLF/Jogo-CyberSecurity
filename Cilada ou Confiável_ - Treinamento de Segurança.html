@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cilada ou Confiável? - Treinamento de Segurança</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#0a0e17',
+                            card: '#111827',
+                            border: '#1f2937',
+                            safe: '#10b981',
+                            scam: '#f43f5e',
+                            accent: '#3b82f6',
+                            neon: '#06b6d4'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-short': 'bounceShort 0.5s ease-in-out 2',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        bounceShort: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 15px rgba(6, 182, 212, 0.3)' },
+                            '100%': { boxShadow: '0 0 30px rgba(6, 182, 212, 0.7)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0a0e17;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.25) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Card Swipe Animation Effects */
+        .swipe-card {
+            touch-action: none;
+            transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+            cursor: grab;
+        }
+
+        .swipe-card:active {
+            cursor: grabbing;
+        }
+
+        .swipe-card.swiping-left {
+            border-color: #f43f5e !important;
+            box-shadow: 0 0 25px rgba(244, 63, 94, 0.4) !important;
+        }
+
+        .swipe-card.swiping-right {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.4) !important;
+        }
+
+        /* Swipe badges overlay on card */
+        .badge-overlay-scam {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .badge-overlay-safe {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .swiping-left .badge-overlay-scam {
+            opacity: 1;
+        }
+
+        .swiping-right .badge-overlay-safe {
+            opacity: 1;
+        }
+
+        /* Custom Scrollbar for review modal */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="text-slate-100 font-sans min-h-screen flex flex-col justify-between overflow-x-hidden antialiased">
+
+    <!-- TOP BAR / HEADER -->
+    <header class="w-full max-w-4xl mx-auto px-4 pt-4 pb-2 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                <i class="fa-solid fa-shield-halved text-slate-950 text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-lg md:text-xl tracking-tight bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-300 bg-clip-text text-transparent">
+                    Cilada ou Confiável?
+                </h1>
+                <p class="text-xs text-slate-400 hidden sm:block">Treinamento de Conscientização em Segurança</p>
+            </div>
+        </div>
+
+        <!-- Timer & Streak Display -->
+        <div class="flex items-center gap-3">
+            <div id="streak-badge" class="hidden items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs animate-pulse">
+                <i class="fa-solid fa-fire text-amber-500"></i>
+                <span>COMBO <span id="combo-multiplier">x1</span></span>
+            </div>
+            
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg glass-panel text-xs md:text-sm font-mono text-slate-300">
+                <i class="fa-regular fa-clock text-cyan-400"></i>
+                <span id="game-timer">00:00</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="w-full max-w-md md:max-w-xl mx-auto px-4 flex-1 flex flex-col justify-center py-4 relative">
+
+        <!-- 1. START SCREEN -->
+        <div id="start-screen" class="glass-panel rounded-2xl p-6 md:p-8 text-center shadow-2xl border border-slate-800 relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
+
+            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-3xl animate-glow">
+                <i class="fa-solid fa-user-shield"></i>
+            </div>
+
+            <h2 class="text-2xl font-bold text-white mb-2">Desafio de Phishing & Engenharia Social</h2>
+            <p class="text-slate-300 text-sm mb-6 leading-relaxed">
+                Você consegue identificar mensagens legítimas e golpes no seu dia a dia de trabalho? Avalie 10 notificações corporativas o mais rápido que puder.
+            </p>
+
+            <div class="grid grid-cols-2 gap-3 text-left mb-6 text-xs text-slate-300">
+                <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-2.5">
+                    <i class="fa-solid fa-xmark text-rose-500 text-base mt-0.5"></i>
+                    <div>
+                        <strong class="text-white block">CILADA ❌</strong>
+                        <span>Deslize para a Esquerda ou pressione <kbd class="px-1 py-0.5 bg-slate-800 rounded text-[10px]">←</kbd></span>
+                    </div>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-2.5">
+                    <i class="fa-solid fa-check text-emerald-400 text-base mt-0.5"></i>
+                    <div>
+                        <strong class="text-white block">CONFIÁVEL ✅</strong>
+                        <span>Deslize para a Direita ou pressione <kbd class="px-1 py-0.5 bg-slate-800 rounded text-[10px]">→</kbd></span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="btn-start" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-base shadow-lg shadow-cyan-500/25 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                INICIAR TREINAMENTO <i class="fa-solid fa-play ml-2"></i>
+            </button>
+        </div>
+
+        <!-- 2. GAME SCREEN (Hidden initially) -->
+        <div id="game-screen" class="hidden flex-col gap-4">
+            
+            <!-- Progress Bar & Score -->
+            <div class="flex items-center justify-between text-xs font-semibold text-slate-400 mb-1 px-1">
+                <span id="card-progress">Card 1 de 10</span>
+                <span>PONTUAÇÃO: <span id="current-score" class="text-cyan-400 font-bold">0</span></span>
+            </div>
+
+            <div class="w-full bg-slate-800/80 h-2 rounded-full overflow-hidden mb-2">
+                <div id="progress-bar" class="bg-gradient-to-r from-cyan-500 to-blue-500 h-full w-0 transition-all duration-300"></div>
+            </div>
+
+            <!-- CARD CONTAINER AREA -->
+            <div class="relative w-full min-h-[380px] md:min-h-[400px] flex items-center justify-center">
+
+                <!-- Dynamic Card Component -->
+                <div id="active-card" class="swipe-card absolute w-full glass-panel rounded-2xl p-5 md:p-6 shadow-2xl border border-slate-700/60 flex flex-col justify-between">
+                    
+                    <!-- Visual Drag Overlays -->
+                    <div class="badge-overlay-scam absolute top-4 right-4 bg-rose-500/20 border-2 border-rose-500 text-rose-400 font-extrabold px-3 py-1 rounded-lg text-sm tracking-wider uppercase backdrop-blur-md z-20">
+                        ❌ CILADA
+                    </div>
+                    <div class="badge-overlay-safe absolute top-4 left-4 bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 font-extrabold px-3 py-1 rounded-lg text-sm tracking-wider uppercase backdrop-blur-md z-20">
+                        ✅ CONFIÁVEL
+                    </div>
+
+                    <!-- Card Header (Channel & Sender info) -->
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span id="channel-badge" class="px-2.5 py-1 rounded-md text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center gap-1.5">
+                                    <i id="channel-icon" class="fa-solid fa-envelope"></i>
+                                    <span id="channel-name">E-mail Corporativo</span>
+                                </span>
+                            </div>
+                            <span id="card-timestamp" class="text-[11px] text-slate-400">Hoje, 10:42</span>
+                        </div>
+
+                        <!-- Sender Box -->
+                        <div class="flex items-center gap-3 bg-slate-900/80 p-2.5 rounded-xl border border-slate-800/80">
+                            <div id="sender-avatar" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400 font-bold text-sm border border-slate-700">
+                                CEO
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 id="sender-name" class="text-sm font-semibold text-white truncate">Diretoria Executiva</h4>
+                                <p id="sender-address" class="text-xs text-slate-400 font-mono truncate">ceo.empresa.br.security-update.com</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="my-auto py-2">
+                        <h3 id="card-subject" class="text-base font-bold text-cyan-300 mb-2 leading-snug">
+                            Urgente: Compra de Cartões de Presente
+                        </h3>
+                        <div id="card-body-text" class="text-sm text-slate-300 leading-relaxed space-y-2">
+                            <!-- Text injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Card Footer / Hint -->
+                    <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+                        <span><i class="fa-solid fa-hand-pointer mr-1"></i> Arraste o card ou use os botões</span>
+                        <span id="security-flag" class="text-[11px] text-slate-400"><i class="fa-solid fa-lock text-slate-500 mr-1"></i>Verificado</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="grid grid-cols-2 gap-4 mt-2">
+                <button id="btn-scam" class="py-3.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white font-extrabold text-sm shadow-lg shadow-rose-900/30 flex items-center justify-center gap-2 transition-all transform active:scale-95 border border-rose-500/30">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                    <span>CILADA</span>
+                </button>
+
+                <button id="btn-safe" class="py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-sm shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 transition-all transform active:scale-95 border border-emerald-500/30">
+                    <i class="fa-solid fa-check text-lg"></i>
+                    <span>CONFIÁVEL</span>
+                </button>
+            </div>
+
+            <p class="text-center text-[11px] text-slate-500 mt-1">
+                Dica: Teclas de atalho <kbd class="px-1 bg-slate-800 text-slate-400 rounded">← Esquerda</kbd> (Cilada) e <kbd class="px-1 bg-slate-800 text-slate-400 rounded">Direita →</kbd> (Confiável)
+            </p>
+
+        </div>
+
+        <!-- 3. FEEDBACK MODAL OVERLAY -->
+        <div id="feedback-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+            <div class="glass-panel w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-700 relative animate-bounce-short">
+                
+                <div class="text-center mb-4">
+                    <div id="feedback-icon-bg" class="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-3xl mb-3 border">
+                        <i id="feedback-icon" class="fa-solid fa-check"></i>
+                    </div>
+                    <h3 id="feedback-title" class="text-xl font-extrabold">RESPOSTA CORRETA!</h3>
+                    <p id="feedback-subtitle" class="text-xs text-slate-400">Você ganhou +100 pontos</p>
+                </div>
+
+                <!-- Educational Insight Box -->
+                <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 mb-5 text-xs md:text-sm text-slate-300 leading-relaxed">
+                    <div class="flex items-center gap-2 mb-2 text-cyan-400 font-bold uppercase text-xs tracking-wider">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <span>Análise de Segurança:</span>
+                    </div>
+                    <p id="feedback-explanation">
+                        Explicação detalhada da vulnerabilidade ou da autenticidade da mensagem.
+                    </p>
+                </div>
+
+                <button id="btn-next-card" class="w-full py-3 px-6 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/25 transition-all">
+                    PRÓXIMO CARD <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 4. END GAME SCREEN -->
+        <div id="end-screen" class="glass-panel rounded-2xl p-6 md:p-8 text-center shadow-2xl border border-slate-800 hidden flex-col">
+            
+            <div id="end-badge-icon" class="w-20 h-20 mx-auto mb-3 rounded-full bg-cyan-500/10 border-2 border-cyan-500/40 flex items-center justify-center text-4xl text-cyan-400">
+                🛡️
+            </div>
+
+            <h2 id="end-rank-title" class="text-2xl font-black text-white mb-1">GUARDIÃO CYBERNETIC</h2>
+            <p id="end-rank-subtitle" class="text-xs text-slate-400 mb-6">Sua percepção contra golpes corporativos é excelente!</p>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-3 gap-2 mb-6">
+                <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <span class="block text-[10px] text-slate-400 uppercase font-bold">Pontuação</span>
+                    <strong id="final-score" class="text-lg font-mono text-cyan-400">0</strong>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <span class="block text-[10px] text-slate-400 uppercase font-bold">Precisão</span>
+                    <strong id="final-accuracy" class="text-lg font-mono text-emerald-400">0%</strong>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <span class="block text-[10px] text-slate-400 uppercase font-bold">Tempo Total</span>
+                    <strong id="final-time" class="text-lg font-mono text-indigo-400">00:00</strong>
+                </div>
+            </div>
+
+            <!-- Review Errors Accordion / List -->
+            <div id="errors-review-container" class="text-left mb-6 hidden">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span>Revisão de Falhas (<span id="errors-count">0</span>)</span>
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                </h4>
+                <div id="errors-list" class="max-h-48 overflow-y-auto space-y-2 pr-1">
+                    <!-- Dynamic mistakes injected here -->
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="btn-restart" class="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/20 transition-all">
+                    JOGAR NOVAMENTE <i class="fa-solid fa-rotate-right ml-1"></i>
+                </button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer class="w-full max-w-4xl mx-auto px-4 py-4 text-center text-xs text-slate-500">
+        <p>Desenvolvido para Treinamento Interno de Segurança da Informação &copy; 2026</p>
+    </footer>
+
+    <script>
+        // DATASET: 10 Realistic Corporate Scenarios
+        const CARDS_DATASET = [
+            {
+                id: 1,
+                channel: "E-mail",
+                channelIcon: "fa-envelope",
+                channelClass: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                senderName: "Diretoria Executiva / CEO",
+                senderAddress: "ceo.empresa.br.security-update.com",
+                timestamp: "Hoje, 09:15",
+                subject: "Urgente: Compra de Cartões de Presente para Cliente VIP",
+                body: "Estou preso em uma reunião com investidores e preciso presentear imediatamente 5 clientes VIPs. Por favor, compre 5 e-gift cards da Apple de R$ 500 cada e envie os códigos no meu WhatsApp pessoal. Reembolso imediato.",
+                isScam: true,
+                explanation: "CILADA! Repare no domínio do remetente (security-update.com em vez do domínio oficial da empresa). Golpistas usam urgência e autoridade do CEO para fraudes com vale-presente."
+            },
+            {
+                id: 2,
+                channel: "E-mail",
+                channelIcon: "fa-envelope",
+                channelClass: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                senderName: "Gestão de Identidade IT",
+                senderAddress: "no-reply@suaempresa.com.br",
+                timestamp: "Hoje, 10:00",
+                subject: "Aviso: Sua senha corporativa expira em 3 dias",
+                body: "Sua senha do Active Directory/E-mail expira em 3 dias. Para realizar a troca com segurança, acesse o portal oficial da empresa: <b>https://portal.suaempresa.com.br/reset</b>.",
+                isScam: false,
+                explanation: "CONFIÁVEL! O e-mail parte do domínio oficial verificado (suaempresa.com.br) e direciona para o portal interno correto sem solicitar senhas diretamente por e-mail."
+            },
+            {
+                id: 3,
+                channel: "WhatsApp",
+                channelIcon: "fa-brands fa-whatsapp",
+                channelClass: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+                senderName: "Recursos Humanos - Novo Número",
+                senderAddress: "+55 (11) 98765-4321",
+                timestamp: "Hoje, 11:20",
+                subject: "Atualização Cadastral e Chave PIX",
+                body: "Olá! Sou do departamento de RH. Tivemos um problema com o sistema de folha de pagamento. Pode nos enviar por aqui o seu CPF e chave PIX para garantirmos o depósito do adiantamento?",
+                isScam: true,
+                explanation: "CILADA! O RH oficial da empresa jamais solicitará dados bancários sensíveis ou chaves PIX através de conversas informais em números de WhatsApp não homologados."
+            },
+            {
+                id: 4,
+                channel: "MS Teams",
+                channelIcon: "fa-users",
+                channelClass: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
+                senderName: "Carlos Silva (Gerente de Projetos)",
+                senderAddress: "carlos.silva@suaempresa.com.br",
+                timestamp: "Hoje, 13:45",
+                subject: "Convite de Reunião: Alinhamento Estratégico Q3",
+                body: "Carlos Silva adicionou você à reunião 'Alinhamento Estratégico Q3' no calendário oficial do Microsoft Teams.",
+                isScam: false,
+                explanation: "CONFIÁVEL! A notificação é um convite nativo do ecossistema de trabalho interno (Teams), enviado por um colega autenticado no diretório corporativo."
+            },
+            {
+                id: 5,
+                channel: "E-mail",
+                channelIcon: "fa-envelope",
+                channelClass: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                senderName: "Rastreio DHL Express",
+                senderAddress: "notificacoes@dhl-delivery-status.net",
+                timestamp: "Hoje, 14:10",
+                subject: "Sua encomenda retida na alfândega - Ação requerida",
+                body: "Tentamos entregar seu pacote corporativo, mas há uma taxa pendente de R$ 14,90. Baixe o comprovante e pague para liberar a entrega: <span class='text-cyan-400 underline'>http://bit.ly/3x89aF_dhl</span>.",
+                isScam: true,
+                explanation: "CILADA! Domínio suspeito (dhl-delivery-status.net) e uso de links encurtados (bit.ly) para esconder sites maliciosos. Golpe clássico de falsa encomenda."
+            },
+            {
+                id: 6,
+                channel: "Intranet / Forms",
+                channelIcon: "fa-square-poll-vertical",
+                channelClass: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+                senderName: "Comunicação Interna",
+                senderAddress: "comunicacao@suaempresa.com.br",
+                timestamp: "Ontem, 16:00",
+                subject: "Pesquisa Anual de Clima Organizacional (Anônima)",
+                body: "Sua opinião é fundamental para nós! Participe da Pesquisa de Clima Organizacional no Microsoft Forms interno. Não são solicitadas senhas de acesso.",
+                isScam: false,
+                explanation: "CONFIÁVEL! Comunicação legítima enviada pelo time interno oficial, reforçando expressamente que não exige senhas ou credenciais do usuário."
+            },
+            {
+                id: 7,
+                channel: "E-mail",
+                channelIcon: "fa-envelope",
+                channelClass: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                senderName: "Departamento Financeiro / Fornecedores",
+                senderAddress: "financeiro-cobranças@gmail.com",
+                timestamp: "Hoje, 15:30",
+                subject: "Fatura em atraso com urgência de pagamento",
+                body: "Prezado, segue em anexo a nota fiscal com cobrança atualizada sob pena de protesto da conta corporativa. Por favor, verifique o arquivo em anexo: <b>Fatura_Urgente_Dezembro.pdf.exe</b>.",
+                isScam: true,
+                explanation: "CILADA! O arquivo anexo possui dupla extensão (.pdf.exe), tratando-se de um arquivo executável malicioso (malware/ransomware). Além disso, remetente usa e-mail gratuito (@gmail.com)."
+            },
+            {
+                id: 8,
+                channel: "SMS / WhatsApp",
+                channelIcon: "fa-comment-dots",
+                channelClass: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+                senderName: "Segurança Itaú/Bradesco Empresa",
+                senderAddress: "SMS 28410",
+                timestamp: "Hoje, 16:05",
+                subject: "Alerta de Segurança Bancária",
+                body: "Detectamos uma tentativa de acesso não autorizado à sua conta jurídica corporativa. Para evitar o bloqueio do Token, valide seu dispositivo agora em: <b>http://seguranca-bancaria-update.net</b>.",
+                isScam: true,
+                explanation: "CILADA! Bancos nunca enviam links diretos por SMS exigindo validação imediata de token em domínios não oficiais (como .net)."
+            },
+            {
+                id: 9,
+                channel: "E-mail",
+                channelIcon: "fa-envelope",
+                channelClass: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                senderName: "Microsoft 365 Security",
+                senderAddress: "no-reply@microsoft.com",
+                timestamp: "Hoje, 08:30",
+                subject: "Atualização de Segurança Aplicada",
+                body: "Um novo dispositivo se conectou à sua conta Microsoft 365 Corporativa. Se foi você, nenhuma ação é necessária. Você pode gerenciar seus dispositivos em <b>https://myaccount.microsoft.com</b>.",
+                isScam: false,
+                explanation: "CONFIÁVEL! Notificação legítima enviada diretamente pelos servidores oficiais da Microsoft (microsoft.com) apontando para o painel de conta autêntico."
+            },
+            {
+                id: 10,
+                channel: "E-mail",
+                channelIcon: "fa-envelope",
+                channelClass: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+                senderName: "Clube de Benefícios Corporativos",
+                senderAddress: "premiacao-exclusiva@promocoes-br.com",
+                timestamp: "Hoje, 12:00",
+                subject: "Parabéns! Você ganhou um iPhone 15 no sorteio interno",
+                body: "Você foi o colaborador sorteado na promoção de final de ano da empresa! Para resgatar seu prêmio gratuito, informe sua senha de rede e CPF na página de cadastro.",
+                isScam: true,
+                explanation: "CILADA! Oferta irrealista que exige credenciais e senhas da rede da empresa em troca de prêmios. Técnica comum de atração via isca (Baiting)."
+            }
+        ];
+
+        // GAME STATE MANAGEMENT
+        let currentCardIndex = 0;
+        let score = 0;
+        let streak = 0;
+        let correctAnswers = 0;
+        let totalTimeSeconds = 0;
+        let timerInterval = null;
+        let shuffledCards = [];
+        let userHistory = [];
+        let isAnswering = false;
+
+        // Web Audio API Synthesizer for SFX
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+                osc.frequency.setValueAtTime(146.83, audioCtx.currentTime + 0.15); // D3
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.35);
+            }
+        }
+
+        // DOM ELEMENTS
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const feedbackModal = document.getElementById('feedback-modal');
+
+        const btnStart = document.getElementById('btn-start');
+        const btnScam = document.getElementById('btn-scam');
+        const btnSafe = document.getElementById('btn-safe');
+        const btnNextCard = document.getElementById('btn-next-card');
+        const btnRestart = document.getElementById('btn-restart');
+
+        const activeCard = document.getElementById('active-card');
+        const cardProgressText = document.getElementById('card-progress');
+        const progressBar = document.getElementById('progress-bar');
+        const currentScoreText = document.getElementById('current-score');
+        const streakBadge = document.getElementById('streak-badge');
+        const comboMultiplierText = document.getElementById('combo-multiplier');
+        const gameTimerText = document.getElementById('game-timer');
+
+        // INITIALIZE & START GAME
+        function startGame() {
+            shuffledCards = [...CARDS_DATASET].sort(() => Math.random() - 0.5);
+            currentCardIndex = 0;
+            score = 0;
+            streak = 0;
+            correctAnswers = 0;
+            totalTimeSeconds = 0;
+            userHistory = [];
+            isAnswering = false;
+
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            gameScreen.classList.add('flex');
+
+            updateUIHeader();
+            renderCard(shuffledCards[currentCardIndex]);
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            gameTimerText.textContent = "00:00";
+            timerInterval = setInterval(() => {
+                totalTimeSeconds++;
+                const mins = String(Math.floor(totalTimeSeconds / 60)).padStart(2, '0');
+                const secs = String(totalTimeSeconds % 60).padStart(2, '0');
+                gameTimerText.textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function renderCard(card) {
+            // Channel & Avatar setup
+            document.getElementById('channel-name').textContent = card.channel;
+            document.getElementById('channel-icon').className = `fa-solid ${card.channelIcon}`;
+            document.getElementById('channel-badge').className = `px-2.5 py-1 rounded-md text-xs font-bold border flex items-center gap-1.5 ${card.channelClass}`;
+
+            document.getElementById('sender-name').textContent = card.senderName;
+            document.getElementById('sender-address').textContent = card.senderAddress;
+            document.getElementById('card-timestamp').textContent = card.timestamp;
+
+            // Avatar Initials
+            const initials = card.senderName.split(' ').map(n => n[0]).slice(0, 2).join('');
+            document.getElementById('sender-avatar').textContent = initials || 'IT';
+
+            // Content
+            document.getElementById('card-subject').textContent = card.subject;
+            document.getElementById('card-body-text').innerHTML = card.body;
+
+            // Reset Card Transform & Styles
+            activeCard.style.transform = 'none';
+            activeCard.classList.remove('swiping-left', 'swiping-right');
+            
+            // Update Progress Bar
+            cardProgressText.textContent = `Card ${currentCardIndex + 1} de ${shuffledCards.length}`;
+            const progressPercent = ((currentCardIndex + 1) / shuffledCards.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+        }
+
+        // HANDLE USER CHOICE (CILADA vs CONFIÁVEL)
+        function handleUserChoice(chosenIsScam) {
+            if (isAnswering) return;
+            isAnswering = true;
+
+            const currentCard = shuffledCards[currentCardIndex];
+            const isCorrect = (chosenIsScam === currentCard.isScam);
+
+            // Record choice history
+            userHistory.push({
+                card: currentCard,
+                userChoiceScam: chosenIsScam,
+                isCorrect: isCorrect
+            });
+
+            if (isCorrect) {
+                correctAnswers++;
+                streak++;
+                const multiplier = streak >= 5 ? 5 : streak >= 3 ? 3 : streak >= 2 ? 2 : 1;
+                const pointsGained = 100 * multiplier;
+                score += pointsGained;
+
+                playSound('correct');
+                showFeedbackModal(true, pointsGained, currentCard.explanation);
+            } else {
+                streak = 0;
+                playSound('error');
+                showFeedbackModal(false, 0, currentCard.explanation);
+            }
+
+            updateUIHeader();
+        }
+
+        function updateUIHeader() {
+            currentScoreText.textContent = score;
+
+            if (streak >= 2) {
+                streakBadge.classList.remove('hidden');
+                streakBadge.classList.add('flex');
+                comboMultiplierText.textContent = `x${streak >= 5 ? 5 : streak >= 3 ? 3 : 2}`;
+            } else {
+                streakBadge.classList.add('hidden');
+                streakBadge.classList.remove('flex');
+            }
+        }
+
+        // FEEDBACK MODAL
+        function showFeedbackModal(isCorrect, pointsGained, explanation) {
+            const modalBg = document.getElementById('feedback-icon-bg');
+            const modalIcon = document.getElementById('feedback-icon');
+            const modalTitle = document.getElementById('feedback-title');
+            const modalSub = document.getElementById('feedback-subtitle');
+            const modalExp = document.getElementById('feedback-explanation');
+
+            if (isCorrect) {
+                modalBg.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center text-3xl mb-3 bg-emerald-500/20 border-emerald-500 text-emerald-400 border";
+                modalIcon.className = "fa-solid fa-check";
+                modalTitle.textContent = "RESPOSTA CORRETA!";
+                modalTitle.className = "text-xl font-extrabold text-emerald-400";
+                modalSub.textContent = `Excelente intuição! +${pointsGained} pontos adicionados.`;
+            } else {
+                modalBg.className = "w-16 h-16 mx-auto rounded-full flex items-center justify-center text-3xl mb-3 bg-rose-500/20 border-rose-500 text-rose-400 border";
+                modalIcon.className = "fa-solid fa-xmark";
+                modalTitle.textContent = "RESPOSTA INCORRETA!";
+                modalTitle.className = "text-xl font-extrabold text-rose-400";
+                modalSub.textContent = "Atenção aos detalhes da ameaça!";
+            }
+
+            modalExp.textContent = explanation;
+            feedbackModal.classList.remove('hidden');
+            feedbackModal.classList.add('flex');
+        }
+
+        function nextCard() {
+            feedbackModal.classList.add('hidden');
+            feedbackModal.classList.remove('flex');
+            isAnswering = false;
+
+            currentCardIndex++;
+            if (currentCardIndex < shuffledCards.length) {
+                renderCard(shuffledCards[currentCardIndex]);
+            } else {
+                endGame();
+            }
+        }
+
+        // END GAME & RANKING
+        function endGame() {
+            clearInterval(timerInterval);
+
+            gameScreen.classList.add('hidden');
+            gameScreen.classList.remove('flex');
+            endScreen.classList.remove('hidden');
+            endScreen.classList.add('flex');
+
+            const totalCards = shuffledCards.length;
+            const accuracy = Math.round((correctAnswers / totalCards) * 100);
+
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-accuracy').textContent = `${accuracy}%`;
+
+            const mins = String(Math.floor(totalTimeSeconds / 60)).padStart(2, '0');
+            const secs = String(totalTimeSeconds % 60).padStart(2, '0');
+            document.getElementById('final-time').textContent = `${mins}:${secs}`;
+
+            // Determine Rank Title & Badge
+            const badgeIcon = document.getElementById('end-badge-icon');
+            const rankTitle = document.getElementById('end-rank-title');
+            const rankSubtitle = document.getElementById('end-rank-subtitle');
+
+            if (accuracy >= 90) {
+                badgeIcon.textContent = "🛡️";
+                rankTitle.textContent = "GUARDIÃO CYBERNETIC";
+                rankSubtitle.textContent = "Inviolável! Você identifica ameaças digitais com maestria impecável.";
+            } else if (accuracy >= 70) {
+                badgeIcon.textContent = "🔍";
+                rankTitle.textContent = "DETETIVE DE PHISHING";
+                rankSubtitle.textContent = "Muito bom! Você possui um ótimo nível de atenção contra a maioria dos golpes.";
+            } else {
+                badgeIcon.textContent = "⚠️";
+                rankTitle.textContent = "ALVO VULNERÁVEL";
+                rankSubtitle.textContent = "Cuidado! Vários golpes passaram despercebidos. Revise os pontos de atenção abaixo.";
+            }
+
+            // Populate Error Review List
+            const mistakes = userHistory.filter(item => !item.isCorrect);
+            const errorsContainer = document.getElementById('errors-review-container');
+            const errorsList = document.getElementById('errors-list');
+            
+            errorsList.innerHTML = '';
+
+            if (mistakes.length > 0) {
+                errorsContainer.classList.remove('hidden');
+                document.getElementById('errors-count').textContent = mistakes.length;
+
+                mistakes.forEach(item => {
+                    const el = document.createElement('div');
+                    el.className = "p-3 rounded-lg bg-slate-900 border border-slate-800 text-xs";
+                    el.innerHTML = `
+                        <div class="flex items-center justify-between font-bold text-slate-200 mb-1">
+                            <span>${item.card.subject}</span>
+                            <span class="text-rose-400 uppercase text-[10px]">${item.card.isScam ? 'Era Cilada' : 'Era Confiável'}</span>
+                        </div>
+                        <p class="text-slate-400 leading-normal">${item.card.explanation}</p>
+                    `;
+                    errorsList.appendChild(el);
+                });
+            } else {
+                errorsContainer.classList.add('hidden');
+            }
+        }
+
+        // TOUCH & MOUSE SWIPE GESTURE LOGIC
+        let startX = 0;
+        let currentX = 0;
+        let isDragging = false;
+
+        function onTouchStart(e) {
+            if (isAnswering) return;
+            isDragging = true;
+            startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        }
+
+        function onTouchMove(e) {
+            if (!isDragging || isAnswering) return;
+            currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const deltaX = currentX - startX;
+
+            activeCard.style.transform = `translateX(${deltaX}px) rotate(${deltaX * 0.05}deg)`;
+
+            if (deltaX < -50) {
+                activeCard.classList.add('swiping-left');
+                activeCard.classList.remove('swiping-right');
+            } else if (deltaX > 50) {
+                activeCard.classList.add('swiping-right');
+                activeCard.classList.remove('swiping-left');
+            } else {
+                activeCard.classList.remove('swiping-left', 'swiping-right');
+            }
+        }
+
+        function onTouchEnd() {
+            if (!isDragging || isAnswering) return;
+            isDragging = false;
+            const deltaX = currentX - startX;
+
+            if (deltaX < -100) {
+                handleUserChoice(true); // Cilada / Left
+            } else if (deltaX > 100) {
+                handleUserChoice(false); // Confiável / Right
+            } else {
+                activeCard.style.transform = 'none';
+                activeCard.classList.remove('swiping-left', 'swiping-right');
+            }
+            startX = 0;
+            currentX = 0;
+        }
+
+        // EVENT LISTENERS
+        btnStart.addEventListener('click', startGame);
+        btnRestart.addEventListener('click', startGame);
+        btnNextCard.addEventListener('click', nextCard);
+
+        btnScam.addEventListener('click', () => handleUserChoice(true));
+        btnSafe.addEventListener('click', () => handleUserChoice(false));
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (gameScreen.classList.contains('hidden') || isAnswering) return;
+
+            if (e.key === 'ArrowLeft') {
+                handleUserChoice(true);
+            } else if (e.key === 'ArrowRight') {
+                handleUserChoice(false);
+            } else if (e.key === 'Enter' && !feedbackModal.classList.contains('hidden')) {
+                nextCard();
+            }
+        });
+
+        // Attach Swipe Events to Active Card
+        activeCard.addEventListener('touchstart', onTouchStart, { passive: true });
+        activeCard.addEventListener('touchmove', onTouchMove, { passive: true });
+        activeCard.addEventListener('touchend', onTouchEnd);
+
+        activeCard.addEventListener('mousedown', onTouchStart);
+        document.addEventListener('mousemove', onTouchMove);
+        document.addEventListener('mouseup', onTouchEnd);
+
+    </script>
+</body>
+</html>
